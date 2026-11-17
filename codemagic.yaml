@@ -27,6 +27,12 @@ workflows:
             sed -i.bak 's/android:label="ashik_hisab"/android:label="আশিক হিসাব"/' android/app/src/main/AndroidManifest.xml
           fi
 
+          # compileSdk ভার্সন 36 এ আপডেট করার জন্য build.gradle ফিক্স করা
+          if [ -f "android/app/build.gradle" ]; then
+            sed -i.bak 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 36/g' android/app/build.gradle
+            sed -i.bak 's/compileSdk [0-9]*/compileSdk 36/g' android/app/build.gradle
+          fi
+
           # Gradle মেমোরি কনফিগারেশন
           echo "org.gradle.jvmargs=-Xmx3G -XX:MaxMetaspaceSize=1G" >> android/gradle.properties
           echo "android.useAndroidX=true" >> android/gradle.properties
