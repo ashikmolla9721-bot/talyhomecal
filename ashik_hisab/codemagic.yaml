@@ -1,0 +1,52 @@
+workflows:
+  ashik-hisab-apk:
+    name: Ashik Hisab APK Build
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      java: 17
+    cache:
+      cache_paths:
+        - $HOME/.gradle/caches
+    scripts:
+      - name: Setup project
+        script: |
+          set -e
+          if [ ! -f pubspec.yaml ] && [ -f ashik_hisab/pubspec.yaml ]; then
+            cd ashik_hisab
+          fi
+          flutter --version
+          flutter config --no-analytics
+          if [ ! -d "android" ]; then
+            flutter create . --org com.ashik --project-name ashik_hisab --platforms android
+          fi
+          if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
+            sed -i.bak 's/android:label="ashik_hisab"/android:label="আশিক হিসাব"/' android/app/src/main/AndroidManifest.xml
+          fi
+          echo "org.gradle.jvmargs=-Xmx3G -XX:MaxMetaspaceSize=1G" >> android/gradle.properties
+          echo "android.useAndroidX=true" >> android/gradle.properties
+          flutter pub get
+          echo "=== Setup OK ==="
+      - name: Accept Android SDK licenses
+        script: |
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+      - name: Build release APK
+        script: |
+          set -e
+          if [ ! -f pubspec.yaml ] && [ -f ashik_hisab/pubspec.yaml ]; then
+            cd ashik_hisab
+          fi
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk ../Ashik-Hisab.apk
+          echo "=== APK READY ==="
+    artifacts:
+      - Ashik-Hisab.apk
+      - build/app/outputs/flutter-apk/*.apk
+      - ashik_hisab/build/app/outputs/flutter-apk/*.apk
+    publishing:
+      email:
+        recipients:
+          - ashikbd9421@gmail.com
+        notify:
+          success: true
+          failure: true
