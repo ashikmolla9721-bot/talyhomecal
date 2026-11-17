@@ -15,16 +15,23 @@ workflows:
           if [ ! -f pubspec.yaml ] && [ -f ashik_hisab/pubspec.yaml ]; then
             cd ashik_hisab
           fi
+          pwd && ls
           flutter --version
           flutter config --no-analytics
-          if [ ! -d "android" ]; then
-            flutter create . --org com.ashik --project-name ashik_hisab --platforms android
-          fi
+
+          # Force clean and regenerate Android v2 embedding platform files
+          rm -rf android
+          flutter create . --org com.ashik --project-name ashik_hisab --platforms android
+
+          # Bengali launcher name
           if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
             sed -i.bak 's/android:label="ashik_hisab"/android:label="আশিক হিসাব"/' android/app/src/main/AndroidManifest.xml
           fi
+
+          # Give Gradle enough memory
           echo "org.gradle.jvmargs=-Xmx3G -XX:MaxMetaspaceSize=1G" >> android/gradle.properties
           echo "android.useAndroidX=true" >> android/gradle.properties
+
           flutter pub get
           echo "=== Setup OK ==="
       - name: Accept Android SDK licenses
@@ -36,8 +43,14 @@ workflows:
           if [ ! -f pubspec.yaml ] && [ -f ashik_hisab/pubspec.yaml ]; then
             cd ashik_hisab
           fi
+
           flutter build apk --release
+
+          ls -la build/app/outputs/flutter-apk/
+
+          # Copy the APK to the repo root so Codemagic can always find it
           cp build/app/outputs/flutter-apk/app-release.apk ../Ashik-Hisab.apk
+          ls -la ../Ashik-Hisab.apk
           echo "=== APK READY ==="
     artifacts:
       - Ashik-Hisab.apk
