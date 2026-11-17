@@ -17,14 +17,26 @@ workflows:
           fi
           flutter --version
           flutter config --no-analytics
-          if [ ! -d "android" ]; then
-            flutter create . --org com.ashik --project-name ashik_hisab --platforms android
-          fi
+
+          # পুরানো android ফোল্ডার রিমুভ করে v2 embedding সহ নতুন প্ল্যাটফর্ম ফাইল তৈরি করুন
+          rm -rf android
+          flutter create . --org com.ashik --project-name ashik_hisab --platforms android
+
+          # অ্যাপের নাম বাংলায় 'আশিক হিসাব' সেট করা
           if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
             sed -i.bak 's/android:label="ashik_hisab"/android:label="আশিক হিসাব"/' android/app/src/main/AndroidManifest.xml
           fi
+
+          # compileSdk ভার্সন 36 এ আপডেট করার জন্য build.gradle ফিক্স করা
+          if [ -f "android/app/build.gradle" ]; then
+            sed -i.bak 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 36/g' android/app/build.gradle
+            sed -i.bak 's/compileSdk [0-9]*/compileSdk 36/g' android/app/build.gradle
+          fi
+
+          # Gradle মেমোরি কনফিগারেশন
           echo "org.gradle.jvmargs=-Xmx3G -XX:MaxMetaspaceSize=1G" >> android/gradle.properties
           echo "android.useAndroidX=true" >> android/gradle.properties
+
           flutter pub get
           echo "=== Setup OK ==="
       - name: Accept Android SDK licenses
@@ -36,8 +48,14 @@ workflows:
           if [ ! -f pubspec.yaml ] && [ -f ashik_hisab/pubspec.yaml ]; then
             cd ashik_hisab
           fi
+
           flutter build apk --release
+
+          ls -la build/app/outputs/flutter-apk/
+
+          # রুট ফোল্ডারে APK কপি করা
           cp build/app/outputs/flutter-apk/app-release.apk ../Ashik-Hisab.apk
+          ls -la ../Ashik-Hisab.apk
           echo "=== APK READY ==="
     artifacts:
       - Ashik-Hisab.apk
