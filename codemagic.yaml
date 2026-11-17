@@ -15,20 +15,19 @@ workflows:
           if [ ! -f pubspec.yaml ] && [ -f ashik_hisab/pubspec.yaml ]; then
             cd ashik_hisab
           fi
-          pwd && ls
           flutter --version
           flutter config --no-analytics
 
-          # Force clean and regenerate Android v2 embedding platform files
+          # পুরানো android ফোল্ডার রিমুভ করে v2 embedding সহ নতুন প্ল্যাটফর্ম ফাইল তৈরি করুন
           rm -rf android
           flutter create . --org com.ashik --project-name ashik_hisab --platforms android
 
-          # Bengali launcher name
+          # অ্যাপের নাম বাংলায় 'আশিক হিসাব' সেট করা
           if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
             sed -i.bak 's/android:label="ashik_hisab"/android:label="আশিক হিসাব"/' android/app/src/main/AndroidManifest.xml
           fi
 
-          # Give Gradle enough memory
+          # Gradle মেমোরি কনফিগারেশন
           echo "org.gradle.jvmargs=-Xmx3G -XX:MaxMetaspaceSize=1G" >> android/gradle.properties
           echo "android.useAndroidX=true" >> android/gradle.properties
 
@@ -48,7 +47,7 @@ workflows:
 
           ls -la build/app/outputs/flutter-apk/
 
-          # Copy the APK to the repo root so Codemagic can always find it
+          # রুট ফোল্ডারে APK কপি করা
           cp build/app/outputs/flutter-apk/app-release.apk ../Ashik-Hisab.apk
           ls -la ../Ashik-Hisab.apk
           echo "=== APK READY ==="
